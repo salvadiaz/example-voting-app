@@ -1,1 +1,57 @@
+os: linux
+
 language: java
+
+jdk:
+    - openjdk7
+
+services:
+    - docker
+
+addons:
+    sonarcloud:
+        organization: $ORGANIZATION
+        token: $SONARCLOUD_TOKEN
+
+install:
+    - curl https://cli-assets.heroku.com/install.sh | sh
+
+script:
+
+    step=0;
+
+    stepInit () {
+      step=$((step + 1));
+      stepName=$1;
+      stepPrint INICIADO;
+    };
+    stepFinish () {
+      if [[ "$?" = "1" ]]
+        then stepPrint FALLIDO;
+        sleep 2;
+        exit 1;
+      fi;
+      stepPrint EXITOSO;
+    };
+
+    stepPrint () {
+      case "$1" in
+      "INICIADO")
+        echo -e "\n\n\n\n\033[1m\e[33m ----- PASO $step $1 - $stepName ----- \n"
+        ;;
+      "FALLIDO")
+        echo -e "\n\033[1m\e[31m ----- PASO $step $1 - $stepName ----- \n\n\n\n"
+        ;;
+      "EXITOSO")
+        echo -e "\n\033[1m\e[32m ----- PASO $step $1 - $stepName ----- \n\n\n\n"
+        ;;
+      esac
+    };
+
+    - > # CONSTRUCCION DE IMAGEN DE DOCKER
+
+    stepInit "CONSTRUCCION DE IMAGEN DE DOCKER";
+
+    docker-compose -f docker-compose-javaworker.yml up -d
+    
+    stepFinish;
